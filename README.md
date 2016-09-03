@@ -1,8 +1,7 @@
 spring-boot-hateaos
 ===================
 
-Available on DZone at:
-https://dzone.com/articles/building-hateoas-hypermedia
+Basically this project was based reading http://docs.spring.io/spring-hateoas/docs/current/reference/html/ and https://dzone.com/articles/building-hateoas-hypermedia
 
 A simple example of using Spring HATEOAS to build a Hypermedia RESTful web service. Built using Java, Spring, Spring Boot and Maven.
 
