@@ -4,8 +4,15 @@ import com.iworks.hateoas.domain.Album;
 import com.iworks.hateoas.domain.Artist;
 import com.iworks.hateoas.service.MusicService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityLinks;
 import org.springframework.hateoas.ExposesResourceFor;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -18,6 +25,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 @Controller("AlbumControllerV2")
 @RequestMapping("/v2/albums")
 @ExposesResourceFor(Album.class)
@@ -29,18 +39,37 @@ public class AlbumController {
     @Autowired
     private MusicService musicService;
 
+    @Autowired
+    private PagedResourcesAssembler pagedResourcesAssembler;
+
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Collection<Resource<Album>> getAllAlbums() {
         Collection<Album> albums = musicService.getAllAlbums();
         List<Resource<Album>> resources = new ArrayList<Resource<Album>>();
 
-        for (Album album : albums) {
+       for (Album album : albums) {
             resources.add(this.getAlbumResource(album));
         }
 
         return resources;
+    }
 
+    @RequestMapping(value = "/pagination", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public PagedResources<Album> getAllAlbumsPagination(@PageableDefault Pageable page) {
+        Collection<Album> albums = musicService.getAllAlbums();
+
+        // Page<User> users = userRepository.findAll(new PageRequest(0, 10));
+
+        Page<Album> albumsPaged = new PageImpl<>(new ArrayList<>(albums), new PageRequest(0, 1), albums.size());
+
+        PagedResources<Album> pagedResources = pagedResourcesAssembler.toResource(albumsPaged);
+        // PagedResources<Album> pagedResources = new PagedResources(albums, page, new Link[0]);
+
+        pagedResources.add(links.linkToCollectionResource(Album.class).withRel("albums"));
+
+        return pagedResources;
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -70,11 +99,12 @@ public class AlbumController {
         resource.add(links.linkToSingleResource(Artist.class, album.getArtist().getId()).withRel("artist"));
         // Option to purchase Album
         if (album.getStockLevel() > 0) {
-            resource.add(links.linkToSingleResource(Album.class, album.getId()).withRel("album.purchase"));
-            // resource.add(linkTo(methodOn(AlbumController.class).purchaseAlbum(album.getId())).withRel("album.purchase"));
+            // resource.add(links.linkToSingleResource(Album.class, album.getId()).withRel("album.purchase"));
+            resource.add(linkTo(methodOn(AlbumController.class).purchaseAlbum(album.getId())).withRel("album.purchase"));
         }
 
-        return resource;
+        resource.add(linkTo(methodOn(AlbumController.class).getAllAlbumsPagination(null)).withRel("albums.pagination"));
 
+        return resource;
     }
 }

@@ -1,2 +1,6 @@
 server:
   port: 8080
+
+spring:
+  hateoas:
+    use-hal-as-default-json-media-type: false
