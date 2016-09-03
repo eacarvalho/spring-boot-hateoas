@@ -15,5 +15,5 @@ You will need Java and Maven installed and working.
 access
 ======
 
-Running on http://localhost:8080/v1/albums
+Running on http://localhost:8080/v1/albums or http://localhost:8080/v2/albums
 	

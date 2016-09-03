@@ -1,5 +1,7 @@
 package com.iworks.hateoas.controller.v2;
 
+import com.iworks.hateoas.controller.v2.assembler.AlbumResourceAssembler;
+import com.iworks.hateoas.controller.v2.resource.AlbumResource;
 import com.iworks.hateoas.domain.Album;
 import com.iworks.hateoas.domain.Artist;
 import com.iworks.hateoas.service.MusicService;
@@ -15,6 +17,7 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +36,12 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @ExposesResourceFor(Album.class)
 public class AlbumController {
 
+    /*
+    EntityLinks ativa o padrão HAL - Anotação @EnableHypermediaSupport(type = {HypermediaType.HAL})
+    Dessa forma é só usar EntityLinks como links.linkToSingleResource(Album.class, album.getId()).withSelfRel()
+    Porém, prefiro usar Building links pointing to methods que é mais flexível e não precisa ativar @EnableHypermediaSupport
+    http://docs.spring.io/spring-hateoas/docs/current/reference/html/
+     */
     @Autowired
     private EntityLinks links;
 
@@ -40,19 +49,19 @@ public class AlbumController {
     private MusicService musicService;
 
     @Autowired
+    private AlbumResourceAssembler albumResourceAssembler;
+
+    @Autowired
     private PagedResourcesAssembler pagedResourcesAssembler;
 
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Collection<Resource<Album>> getAllAlbums() {
+    public ResponseEntity<List<AlbumResource>> getAllAlbums() {
         Collection<Album> albums = musicService.getAllAlbums();
-        List<Resource<Album>> resources = new ArrayList<Resource<Album>>();
 
-       for (Album album : albums) {
-            resources.add(this.getAlbumResource(album));
-        }
+        List<AlbumResource> resources = albumResourceAssembler.toResources(albums);
 
-        return resources;
+        return ResponseEntity.ok(resources);
     }
 
     @RequestMapping(value = "/pagination", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -62,10 +71,11 @@ public class AlbumController {
 
         // Page<User> users = userRepository.findAll(new PageRequest(0, 10));
 
+        // Adicionado spring-data para ter o objeto assim quando subir o spring lança exceção de conexão
         Page<Album> albumsPaged = new PageImpl<>(new ArrayList<>(albums), new PageRequest(0, 1), albums.size());
 
-        PagedResources<Album> pagedResources = pagedResourcesAssembler.toResource(albumsPaged);
-        // PagedResources<Album> pagedResources = new PagedResources(albums, page, new Link[0]);
+        // TODO: Criar a PagedResourcesAssembler assim como AlbumResourceAssembler
+        PagedResources<Album> pagedResources = pagedResourcesAssembler.toResource(albumsPaged, new AlbumResourceAssembler());
 
         pagedResources.add(links.linkToCollectionResource(Album.class).withRel("albums"));
 
