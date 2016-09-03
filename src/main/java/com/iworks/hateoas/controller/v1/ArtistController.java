@@ -15,13 +15,13 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Controller("ArtistControllerV1")
-@RequestMapping("/v1")
+@RequestMapping("/v1/artists")
 public class ArtistController {
 
     @Autowired
     private MusicService musicService;
 
-    @RequestMapping(value = "/artist/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Resource<Artist> getArtist(@PathVariable(value = "id") String id) {
         Artist a = musicService.getArtist(id);

@@ -1,11 +1,5 @@
 package com.iworks.hateoas.controller.v1;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import com.iworks.hateoas.domain.Album;
 import com.iworks.hateoas.service.MusicService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,61 +11,68 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 @Controller("AlbumControllerV1")
-@RequestMapping("/v1")
+@RequestMapping("/v1/albums")
 public class AlbumController {
-	
-	@Autowired
-	private MusicService musicService;
 
-	@RequestMapping(value = "/albums", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
-	public Collection<Resource<Album>> getAllAlbums() {
-		
-		Collection<Album> albums = musicService.getAllAlbums();
-		List<Resource<Album>> resources = new ArrayList<Resource<Album>>();
-		for (Album album : albums) {
-			resources.add(getAlbumResource(album));
-		}
-		return resources;
-		
-	}
+    @Autowired
+    private MusicService musicService;
 
-	@RequestMapping(value = "/album/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
-	public Resource<Album> getAlbum(@PathVariable(value = "id") String id) {
+    @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Collection<Resource<Album>> getAllAlbums() {
 
-		Album album = musicService.getAlbum(id);
-		return getAlbumResource(album);
+        Collection<Album> albums = musicService.getAllAlbums();
+        List<Resource<Album>> resources = new ArrayList<Resource<Album>>();
+        for (Album album : albums) {
+            resources.add(getAlbumResource(album));
+        }
+        return resources;
 
-	}
+    }
 
-	private Resource<Album> getAlbumResource(Album album) {
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Resource<Album> getAlbum(@PathVariable(value = "id") String id) {
 
-		Resource<Album> resource = new Resource<Album>(album);
+        Album album = musicService.getAlbum(id);
+        return getAlbumResource(album);
 
-		// Link to Album
-		resource.add(linkTo(methodOn(AlbumController.class).getAlbum(album.getId())).withSelfRel());
-		// Link to Artist
-		resource.add(linkTo(methodOn(ArtistController.class).getArtist(album.getArtist().getId())).withRel("artist"));
-		// Option to purchase Album
-		if (album.getStockLevel() > 0) {
-			resource.add(linkTo(methodOn(AlbumController.class).purchaseAlbum(album.getId())).withRel("album.purchase"));
-		}
+    }
 
-		return resource;
+    private Resource<Album> getAlbumResource(Album album) {
 
-	}
+        Resource<Album> resource = new Resource<Album>(album);
 
-	@RequestMapping(value = "/album/purchase/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
-	public Resource<Album> purchaseAlbum(@PathVariable(value = "id") String id) {
-		
-		Album a = musicService.getAlbum(id);
-		a.setStockLevel(a.getStockLevel() - 1);
-		Resource<Album> resource = new Resource<Album>(a);
-		resource.add(linkTo(methodOn(AlbumController.class).getAlbum(id)).withSelfRel());
-		return resource;
-		
-	}
+        // Link to Album
+        resource.add(linkTo(methodOn(AlbumController.class).getAlbum(album.getId())).withSelfRel());
+        // Link to Artist
+        resource.add(linkTo(methodOn(ArtistController.class).getArtist(album.getArtist().getId())).withRel("artist"));
+        // Option to purchase Album
+        if (album.getStockLevel() > 0) {
+            resource.add(linkTo(methodOn(AlbumController.class).purchaseAlbum(album.getId())).withRel("album.purchase"));
+        }
+
+        return resource;
+
+    }
+
+    @RequestMapping(value = "/purchase/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Resource<Album> purchaseAlbum(@PathVariable(value = "id") String id) {
+
+        Album a = musicService.getAlbum(id);
+        a.setStockLevel(a.getStockLevel() - 1);
+        Resource<Album> resource = new Resource<Album>(a);
+        resource.add(linkTo(methodOn(AlbumController.class).getAlbum(id)).withSelfRel());
+        return resource;
+
+    }
 }
