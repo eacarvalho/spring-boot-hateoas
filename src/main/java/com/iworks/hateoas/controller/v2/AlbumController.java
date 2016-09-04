@@ -1,9 +1,9 @@
 package com.iworks.hateoas.controller.v2;
 
 import com.iworks.hateoas.controller.v2.assembler.AlbumResourceAssembler;
+import com.iworks.hateoas.controller.v2.links.AlbumLink;
 import com.iworks.hateoas.controller.v2.resource.AlbumResource;
 import com.iworks.hateoas.domain.Album;
-import com.iworks.hateoas.domain.Artist;
 import com.iworks.hateoas.service.MusicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Controller("AlbumControllerV2")
 @RequestMapping("/v2/albums")
@@ -53,6 +52,9 @@ public class AlbumController {
 
     @Autowired
     private PagedResourcesAssembler pagedResourcesAssembler;
+
+    @Autowired
+    private AlbumLink albumLink;
 
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -101,19 +103,18 @@ public class AlbumController {
     }
 
     private Resource<Album> getAlbumResource(Album album) {
-        Resource<Album> resource = new Resource<Album>(album);
+        Resource<Album> resource = new Resource<>(album);
 
         // Link to Album
-        resource.add(links.linkToSingleResource(Album.class, album.getId()).withSelfRel());
+        resource.add(albumLink.getSelfLink(album));
         // Link to Artist
-        resource.add(links.linkToSingleResource(Artist.class, album.getArtist().getId()).withRel("artist"));
+        resource.add(albumLink.getArtistLink(album));
         // Option to purchase Album
         if (album.getStockLevel() > 0) {
             // resource.add(links.linkToSingleResource(Album.class, album.getId()).withRel("album.purchase"));
-            resource.add(linkTo(methodOn(AlbumController.class).purchaseAlbum(album.getId())).withRel("album.purchase"));
+            resource.add(albumLink.getPurchaseAlbumLink(album));
         }
-
-        resource.add(linkTo(methodOn(AlbumController.class).getAllAlbumsPagination(null)).withRel("albums.pagination"));
+        resource.add(albumLink.getAlbumPaginationLink(album));
 
         return resource;
     }
