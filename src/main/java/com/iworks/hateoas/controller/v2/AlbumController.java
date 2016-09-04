@@ -16,6 +16,7 @@ import org.springframework.hateoas.EntityLinks;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,6 +24,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import static org.springframework.hateoas.PagedResources.PageMetadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,6 +85,27 @@ public class AlbumController {
         pagedResources.add(links.linkToCollectionResource(Album.class).withRel("albums"));
 
         return pagedResources;
+    }
+
+    @RequestMapping(value = "/paged", method = RequestMethod.GET)
+    public HttpEntity<PagedResources<AlbumResource>> showAllPaged() {
+        Collection<Album> albums = musicService.getAllAlbums();
+
+        AlbumResourceAssembler assembler = new AlbumResourceAssembler();
+        List<AlbumResource> resources = assembler.toResources(albums);
+
+        long size = 1;
+        long number = 1;
+        long totalElements = resources.size();
+        long totalPages = totalElements / size;
+
+        PageMetadata pageMetadata = new PageMetadata(size, number, totalElements, totalPages);
+
+        PagedResources<AlbumResource> pagedResources = new PagedResources<>(resources, pageMetadata);
+
+        pagedResources.add(links.linkToCollectionResource(Album.class).withRel("albums"));
+
+        return new HttpEntity<>(pagedResources);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
