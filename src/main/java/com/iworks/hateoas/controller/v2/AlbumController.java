@@ -64,7 +64,7 @@ public class AlbumController {
         return ResponseEntity.ok(resources);
     }
 
-    @RequestMapping(value = "/pagination", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/pagination", method = RequestMethod.GET, produces = "application/hal+json")
     @ResponseBody
     public PagedResources<Album> getAllAlbumsPagination(@PageableDefault Pageable page) {
         Collection<Album> albums = musicService.getAllAlbums();

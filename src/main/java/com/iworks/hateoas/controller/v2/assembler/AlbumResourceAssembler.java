@@ -1,6 +1,6 @@
 package com.iworks.hateoas.controller.v2.assembler;
 
-import com.iworks.hateoas.controller.v1.ArtistController;
+import com.iworks.hateoas.controller.v2.ArtistController;
 import com.iworks.hateoas.controller.v2.AlbumController;
 import com.iworks.hateoas.controller.v2.resource.AlbumResource;
 import com.iworks.hateoas.domain.Album;
